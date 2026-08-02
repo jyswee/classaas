@@ -42,6 +42,39 @@ async function login(args, baseUrl) {
   fmt.info(`Token saved to ${file}`);
 }
 
+async function signup(args, baseUrl) {
+  validateFlags(args, ['email', 'password', 'first-name', 'last-name', 'org', 'plan', 'coupon', 'url'],
+    'caas signup --email E --password P --first-name F --last-name L --org "School Name" [--plan basic]');
+  const url = getFlag(args, 'url');
+  const effectiveUrl = (url && url !== true) ? url : baseUrl;
+  const email = getFlag(args, 'email');
+  const password = getFlag(args, 'password');
+  const firstName = getFlag(args, 'first-name');
+  const lastName = getFlag(args, 'last-name');
+  const org = getFlag(args, 'org');
+  if ([email, password, firstName, lastName, org].some(v => !v || v === true)) {
+    fmt.err('Usage: caas signup --email E --password P --first-name F --last-name L --org "School Name"');
+    process.exit(1);
+  }
+  const body = { email, password, firstName, lastName, organizationName: org };
+  const plan = getFlag(args, 'plan');
+  if (plan && plan !== true) body.plan = plan;
+  const coupon = getFlag(args, 'coupon');
+  if (coupon && coupon !== true) body.couponCode = coupon;
+  const result = await apiMod.signup(effectiveUrl, body);
+  const jwt = result.data && result.data.token;
+  const user = (result.data && result.data.user) || {};
+  if (jwt) {
+    const data = { token: jwt, email: user.email || email };
+    if (url && url !== true) data.baseUrl = url;
+    const file = saveConfig(data);
+    fmt.ok(`Signed up as ${user.email || email} (${user.role || 'host'})`);
+    fmt.info(`Token saved to ${file}`);
+  } else {
+    fmt.ok(result.message || 'Account created — now run: caas login --email E --password P');
+  }
+}
+
 function logout() {
   const file = clearConfig();
   fmt.ok(`Logged out (removed ${file})`);
@@ -101,4 +134,4 @@ function config(json, args) {
   console.log(fmt.row('Token', cfg.token ? `${fmt.C.green}set${fmt.C.reset} (${cfg.source})` : `${fmt.C.red}not set${fmt.C.reset}`));
 }
 
-module.exports = { login, logout, me, config };
+module.exports = { login, signup, logout, me, config };

@@ -29,7 +29,7 @@ if (!command || hasFlag(args, 'help') || command === '--help' || command === 'he
 const config = loadConfig(args);
 
 // Commands that don't need auth
-const noAuth = ['login', 'logout', 'config', 'init', 'health', 'verify', 'courses', 'course', 'categories', 'help', '--help', '--version'];
+const noAuth = ['login', 'signup', 'logout', 'config', 'init', 'health', 'verify', 'courses', 'course', 'categories', 'help', '--help', '--version'];
 
 if (!noAuth.includes(command) && !config.token) {
   fmt.err('Not logged in. Run: caas login --email E --password P (or set CLASSAAS_TOKEN)');
@@ -43,6 +43,7 @@ const client = api(config);
 const handlers = {
   // Auth
   login: () => require('./commands/auth').login(subArgs, config.baseUrl),
+  signup: () => require('./commands/auth').signup(subArgs, config.baseUrl),
   logout: () => require('./commands/auth').logout(),
   me: () => require('./commands/auth').me(client, jsonMode, config.source),
   config: () => require('./commands/auth').config(jsonMode, args),
@@ -78,6 +79,54 @@ const handlers = {
   cohorts: () => require('./commands/cohorts').list(client, subArgs, jsonMode),
   cohort: () => require('./commands/cohorts').run(client, subArgs, jsonMode),
   instructor: () => require('./commands/cohorts').grantInstructor(client, subArgs, jsonMode),
+
+  // Teaching (creator course management)
+  teach: () => require('./commands/teach').list(client, subArgs, jsonMode),
+  create: () => require('./commands/teach').create(client, subArgs, jsonMode),
+  show: () => require('./commands/teach').show(client, subArgs, jsonMode),
+  update: () => require('./commands/teach').update(client, subArgs, jsonMode),
+  publish: () => require('./commands/teach').publish(client, subArgs, jsonMode),
+  archive: () => require('./commands/teach').archive(client, subArgs, jsonMode),
+  remove: () => require('./commands/teach').remove(client, subArgs, jsonMode),
+  duplicate: () => require('./commands/teach').duplicate(client, subArgs, jsonMode),
+  section: () => require('./commands/teach').section(client, subArgs, jsonMode),
+  lesson: () => require('./commands/teach').lesson(client, subArgs, jsonMode),
+  quizset: () => require('./commands/teach').quizset(client, subArgs, jsonMode),
+  students: () => require('./commands/teach').students(client, subArgs, jsonMode),
+  'bulk-enroll': () => require('./commands/teach').bulkEnroll(client, subArgs, jsonMode),
+  analytics: () => require('./commands/teach').analytics(client, subArgs, jsonMode),
+
+  // Learning (learner side)
+  learn: () => require('./commands/learn').show(client, subArgs, jsonMode),
+  complete: () => require('./commands/learn').complete(client, subArgs, jsonMode),
+  quiz: () => require('./commands/learn').quiz(client, subArgs, jsonMode),
+  certificate: () => require('./commands/learn').certificate(client, subArgs, jsonMode),
+
+  // Social — reviews, messaging, community
+  reviews: () => require('./commands/social').reviews(client, subArgs, jsonMode),
+  review: () => require('./commands/social').review(client, subArgs, jsonMode),
+  inbox: () => require('./commands/social').inbox(client, subArgs, jsonMode),
+  msg: () => require('./commands/social').msg(client, subArgs, jsonMode),
+  broadcast: () => require('./commands/social').broadcast(client, subArgs, jsonMode),
+  community: () => require('./commands/social').community(client, subArgs, jsonMode),
+
+  // Commerce — memberships, products, coaching
+  memberships: () => require('./commands/commerce').memberships(client, subArgs, jsonMode),
+  products: () => require('./commands/commerce').products(client, subArgs, jsonMode),
+  coaching: () => require('./commands/commerce').coaching(client, subArgs, jsonMode),
+
+  // Money — payments, revenue, Connect, payouts, dashboards
+  payments: () => require('./commands/money').payments(client, subArgs, jsonMode),
+  revenue: () => require('./commands/money').revenue(client, subArgs, jsonMode),
+  connect: () => require('./commands/money').connect(client, subArgs, jsonMode),
+  payouts: () => require('./commands/money').payouts(client, subArgs, jsonMode),
+  dashboard: () => require('./commands/money').dashboard(client, subArgs, jsonMode),
+
+  // Admin — platform admin, org, feature flags, coupons
+  admin: () => require('./commands/admin').admin(client, subArgs, jsonMode),
+  org: () => require('./commands/admin').org(client, subArgs, jsonMode),
+  flags: () => require('./commands/admin').flags(client, subArgs, jsonMode),
+  coupons: () => require('./commands/admin').coupons(client, subArgs, jsonMode),
 };
 
 if (handlers[command]) {

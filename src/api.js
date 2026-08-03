@@ -4,7 +4,7 @@
  */
 const pkg = require('../package.json');
 
-function request(baseUrl, token, method, path, body) {
+function request(baseUrl, token, method, path, body, timeoutMs) {
   return new Promise((resolve, reject) => {
     const url = new URL(path, baseUrl);
     const isHttps = url.protocol === 'https:';
@@ -41,7 +41,7 @@ function request(baseUrl, token, method, path, body) {
     });
 
     req.on('error', reject);
-    req.setTimeout(30000, () => { req.destroy(); reject(new Error('Request timeout')); });
+    req.setTimeout(timeoutMs || 30000, () => { req.destroy(); reject(new Error('Request timeout')); });
 
     if (body) req.write(JSON.stringify(body));
     req.end();
@@ -52,7 +52,7 @@ const API = '/api/v1';
 const e = encodeURIComponent;
 
 function api(config) {
-  const r = (method, path, body) => request(config.baseUrl, config.token, method, path, body);
+  const r = (method, path, body, timeoutMs) => request(config.baseUrl, config.token, method, path, body, timeoutMs);
   const q = (params) => params ? `?${params}` : '';
 
   return {
@@ -190,6 +190,9 @@ function api(config) {
     adminUsers: () => r('GET', `${API}/admin/users`),
     adminOrgs: () => r('GET', `${API}/admin/organizations`),
     adminHealth: () => r('GET', `${API}/admin/health/detailed`),
+    adminBootstrap: () => r('POST', `${API}/admin/bootstrap`),
+    adminMigrateCourses: (data) => r('POST', `${API}/admin/migrate-courses`, data || {}, 12 * 60 * 1000),
+    adminScaffoldAccreditation: () => r('POST', `${API}/admin/scaffold-accreditation`, {}, 12 * 60 * 1000),
 
     // Feature flags (super_admin)
     featureFlags: () => r('GET', `${API}/feature-flags/`),

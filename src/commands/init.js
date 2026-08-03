@@ -86,7 +86,7 @@ const AGENT_SCHEMA = {
     dashboard: { syntax: 'caas dashboard [--forecast|--customers|--payments]', roles: ['host', 'org_admin', 'super_admin'] },
 
     // Admin
-    admin: { syntax: 'caas admin [stats|users|orgs|health]', roles: ['super_admin'] },
+    admin: { syntax: 'caas admin [stats|users|orgs|health] | caas admin bootstrap (promote self to super_admin on a fresh platform — closes once one exists) | caas admin migrate [--force|--dry-run] (seed course catalogue) | caas admin scaffold (build accreditation programme)', roles: ['super_admin'] },
     org: { syntax: 'caas org [--domain example.com]', roles: ['org_admin', 'super_admin'] },
     flags: { syntax: 'caas flags | caas flags create NAME [--enabled true] | caas flags update ID --enabled false | caas flags rm ID', roles: ['super_admin'] },
     coupons: { syntax: 'caas coupons | caas coupons create CODE --percent 20 | caas coupons validate CODE [--course ID] | caas coupons rm ID', roles: ['host', 'org_admin', 'super_admin'] },
@@ -163,6 +163,9 @@ ${C.bold}MONEY${C.reset} ${C.dim}(creator)${C.reset}
 
 ${C.bold}ADMIN${C.reset} ${C.dim}(super_admin)${C.reset}
   caas admin [stats|users|orgs|health]        Platform admin
+  caas admin bootstrap                        First-admin self-promote (fresh platform only)
+  caas admin migrate [--force|--dry-run]      Seed course catalogue
+  caas admin scaffold                         Build accreditation programme
   caas org [--domain example.com]             My organization
   caas flags                                  Feature flags
 

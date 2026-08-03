@@ -9,9 +9,37 @@ function strFlag(args, name) {
   return (v && v !== true) ? v : null;
 }
 
-// caas admin [stats|users|orgs|health]
+// caas admin [stats|users|orgs|health|bootstrap|migrate|scaffold]
 async function admin(client, args, json) {
   const sub = args[0] || 'stats';
+
+  // Self-serve platform bootstrap + maintenance (no server exec needed)
+  if (sub === 'bootstrap') {
+    const result = await client.adminBootstrap();
+    if (json) return console.log(JSON.stringify(result, null, 2));
+    fmt.ok(result.message || 'Bootstrapped');
+    if (result.data?.role) fmt.info(`${result.data.email} → ${result.data.role} (re-login to refresh token)`);
+    return;
+  }
+  if (sub === 'migrate') {
+    validateFlags(args.slice(1), ['force', 'dry-run'], 'caas admin migrate [--force] [--dry-run]');
+    const body = {};
+    if (getFlag(args, 'force')) body.force = true;
+    if (getFlag(args, 'dry-run')) body.dryRun = true;
+    const result = await client.adminMigrateCourses(body);
+    if (json) return console.log(JSON.stringify(result, null, 2));
+    fmt.ok(result.message || 'Migration completed');
+    if (result.data?.output) console.log(result.data.output);
+    return;
+  }
+  if (sub === 'scaffold') {
+    const result = await client.adminScaffoldAccreditation();
+    if (json) return console.log(JSON.stringify(result, null, 2));
+    fmt.ok(result.message || 'Scaffold completed');
+    if (result.data?.output) console.log(result.data.output);
+    return;
+  }
+
   let result;
   if (sub === 'users') result = await client.adminUsers();
   else if (sub === 'orgs' || sub === 'organizations') result = await client.adminOrgs();

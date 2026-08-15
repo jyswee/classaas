@@ -1,0 +1,15 @@
+src/
+.classaas/
+.git/
+.gitignore
+node_modules/
+test/
+tests/
+*.test.js
+AGENTS.md
+CLAUDE.md
+*.md
+!README.md
+!LICENSE
+scripts/
+docs/

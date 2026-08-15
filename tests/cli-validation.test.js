@@ -8,6 +8,7 @@ const assert = require('node:assert');
 const courses = require('../src/commands/courses');
 const credentials = require('../src/commands/credentials');
 const cohorts = require('../src/commands/cohorts');
+const video = require('../src/commands/video');
 
 // A client whose every method throws — guards against network calls
 // happening when validation should have failed first.
@@ -95,6 +96,46 @@ test('verify: valid code reaches verifyCredential', async () => {
   };
   await silence(() => credentials.verify(client, ['abc123'], false));
   assert.strictEqual(captured, 'abc123');
+});
+
+test('video: unknown subcommand → exit 1',
+  () => expectExit(() => video.run(networkGuard, ['frobnicate'], false)));
+
+test('video start: no id → exit 1',
+  () => expectExit(() => video.start(networkGuard, [], false)));
+
+test('video schedule: no title → exit 1',
+  () => expectExit(() => video.schedule(networkGuard, [], false)));
+
+test('video schedule: --now builds an instant class', async () => {
+  let captured = null;
+  const client = {
+    scheduleLiveClass: async (data) => { captured = data; return { success: true, data: { _id: 'm1', status: 'active' } }; },
+  };
+  await silence(() => video.run(client, ['schedule', '--title', 'Office Hours', '--now'], false));
+  assert.strictEqual(captured.title, 'Office Hours');
+  assert.strictEqual(captured.type, 'instant');
+});
+
+test('video schedule: scheduled class carries scheduledAt + duration', async () => {
+  let captured = null;
+  const client = {
+    scheduleLiveClass: async (data) => { captured = data; return { success: true, data: {} }; },
+  };
+  await silence(() => video.run(client, ['schedule', '--title', 'Class', '--at', '2026-08-20T14:00Z', '--duration', '45'], false));
+  assert.strictEqual(captured.type, 'scheduled');
+  assert.strictEqual(captured.scheduling.scheduledAt, '2026-08-20T14:00Z');
+  assert.strictEqual(captured.scheduling.duration, 45);
+});
+
+test('video start: folds the tokenless join link in when start omits it', async () => {
+  let joined = null;
+  const client = {
+    startLiveClass: async () => ({ success: true, message: 'started', data: { _id: 'm1', status: 'active' } }),
+    joinLiveClass: async (id) => { joined = id; return { success: true, data: { joinUrl: 'https://c/class-room.html?room=r1' } }; },
+  };
+  await silence(() => video.run(client, ['start', 'm1'], false));
+  assert.strictEqual(joined, 'm1', 'start should reach for the join link when none was returned');
 });
 
 test('cohort create: full flags produce correct body', async () => {

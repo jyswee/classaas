@@ -50,6 +50,14 @@ caas bulk-enroll crs_xxx --emails a@x.com,b@y.com
 caas analytics crs_xxx
 caas broadcast crs_xxx "New lesson is live!"
 
+# Live classes (host/org_admin/super_admin)
+caas video schedule --title "Office Hours" --at 2026-08-20T14:00Z --duration 60
+caas video list --scheduled
+caas video start 66b...              # marks active, prints the tokenless join link
+caas video join 66b...              # room link for an already-running class
+caas video end 66b...
+caas video analytics
+
 # Cohorts
 caas cohorts
 caas cohort create "Malta 2026" --instructor joe@tyga.agency --courses crs_a,crs_b

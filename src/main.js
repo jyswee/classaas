@@ -96,6 +96,9 @@ const handlers = {
   'bulk-enroll': () => require('./commands/teach').bulkEnroll(client, subArgs, jsonMode),
   analytics: () => require('./commands/teach').analytics(client, subArgs, jsonMode),
 
+  // Live classes (video calls) — schedule/start/end/join management verbs
+  video: () => require('./commands/video').run(client, subArgs, jsonMode),
+
   // Learning (learner side)
   learn: () => require('./commands/learn').show(client, subArgs, jsonMode),
   complete: () => require('./commands/learn').complete(client, subArgs, jsonMode),

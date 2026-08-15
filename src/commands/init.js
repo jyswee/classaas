@@ -57,6 +57,13 @@ const AGENT_SCHEMA = {
     'bulk-enroll': { syntax: 'caas bulk-enroll COURSE_ID --emails a@x.com,b@y.com', roles: ['host', 'org_admin', 'super_admin'] },
     analytics: { syntax: 'caas analytics [COURSE_ID] [--engagement]', roles: ['host', 'org_admin', 'super_admin'] },
 
+    // Live classes (video)
+    video: {
+      syntax: 'caas video list [--active|--scheduled|--status S] | caas video show ID | caas video schedule --title T [--at ISO] [--duration MIN] [--now] | caas video start ID | caas video join ID | caas video end ID | caas video cancel ID | caas video analytics [--from D --to D]',
+      roles: ['host', 'org_admin', 'super_admin'],
+      description: 'Manage live classes. start/join return a tokenless room link — the host opens it signed in; access is re-checked on connect, so no token rides in the URL.',
+    },
+
     // Cohorts + instructors
     cohorts: { syntax: 'caas cohorts', roles: ['host', 'org_admin', 'super_admin'] },
     cohort: {
@@ -137,6 +144,14 @@ ${C.bold}TEACHING${C.reset} ${C.dim}(host/org_admin/super_admin)${C.reset}
   caas bulk-enroll COURSE_ID --emails a,b     Bulk enroll
   caas analytics [COURSE_ID]                  Course / engagement analytics
   caas broadcast COURSE_ID "text"             Message all students
+
+${C.bold}LIVE CLASSES${C.reset} ${C.dim}(host/org_admin/super_admin)${C.reset}
+  caas video list [--active|--scheduled]      List my live classes
+  caas video schedule --title T [--at ISO]    Schedule (--now for instant)
+  caas video start ID                         Start + get tokenless join link
+  caas video join ID                          Get the room link (no token in URL)
+  caas video end ID | caas video cancel ID    End active / delete
+  caas video analytics                        Live-class analytics
 
 ${C.bold}COHORTS${C.reset}
   caas cohorts | caas cohort show ID          List / detail

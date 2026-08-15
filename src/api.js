@@ -219,6 +219,21 @@ function api(config) {
     bundlePublic: (slug) => r('GET', `${API}/bundles/public/${e(slug)}`),
     myBundles: () => r('GET', `${API}/bundles`),
     enrollBundle: (id) => r('POST', `${API}/bundles/${e(id)}/enroll`),
+
+    // ── Live classes (video calls) — management verbs only. join/start return a
+    // tokenless room URL; the room page re-checks access from the viewer's own
+    // session, so no bearer ever rides in the link (routes/videoCalls.js).
+    liveClasses: (params) => r('GET', `${API}/video-calls/${q(params)}`),
+    liveClassesActive: () => r('GET', `${API}/video-calls/active`),
+    liveClassesScheduled: (params) => r('GET', `${API}/video-calls/scheduled${q(params)}`),
+    liveClassAnalytics: (params) => r('GET', `${API}/video-calls/analytics${q(params)}`),
+    liveClass: (id) => r('GET', `${API}/video-calls/${e(id)}`),
+    scheduleLiveClass: (data) => r('POST', `${API}/video-calls/`, data),
+    updateLiveClass: (id, data) => r('PUT', `${API}/video-calls/${e(id)}`, data),
+    cancelLiveClass: (id) => r('DELETE', `${API}/video-calls/${e(id)}`),
+    startLiveClass: (id) => r('POST', `${API}/video-calls/${e(id)}/start`),
+    endLiveClass: (id) => r('POST', `${API}/video-calls/${e(id)}/end`),
+    joinLiveClass: (id) => r('POST', `${API}/video-calls/${e(id)}/join`),
   };
 }
 

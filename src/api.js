@@ -234,6 +234,51 @@ function api(config) {
     startLiveClass: (id) => r('POST', `${API}/video-calls/${e(id)}/start`),
     endLiveClass: (id) => r('POST', `${API}/video-calls/${e(id)}/end`),
     joinLiveClass: (id) => r('POST', `${API}/video-calls/${e(id)}/join`),
+
+    // ── Discussions (course Q&A threads; enrolled-or-creator) ──
+    discussions: (courseId, params) => r('GET', `${API}/discussions/${e(courseId)}${q(params)}`),
+    discussion: (courseId, discussionId) => r('GET', `${API}/discussions/${e(courseId)}/${e(discussionId)}`),
+    createDiscussion: (courseId, data) => r('POST', `${API}/discussions/${e(courseId)}`, data),
+    replyDiscussion: (courseId, discussionId, data) => r('POST', `${API}/discussions/${e(courseId)}/${e(discussionId)}/replies`, data),
+    upvoteDiscussion: (courseId, discussionId) => r('POST', `${API}/discussions/${e(courseId)}/${e(discussionId)}/upvote`),
+    pinDiscussion: (courseId, discussionId) => r('PUT', `${API}/discussions/${e(courseId)}/${e(discussionId)}/pin`),
+    resolveDiscussion: (courseId, discussionId) => r('PUT', `${API}/discussions/${e(courseId)}/${e(discussionId)}/resolve`),
+    deleteDiscussion: (courseId, discussionId) => r('DELETE', `${API}/discussions/${e(courseId)}/${e(discussionId)}`),
+
+    // ── Assignments (creator authoring + student submissions + grading) ──
+    assignments: (params) => r('GET', `${API}/assignments${q(params)}`),
+    createAssignment: (data) => r('POST', `${API}/assignments`, data),
+    updateAssignment: (id, data) => r('PUT', `${API}/assignments/${e(id)}`, data),
+    deleteAssignment: (id) => r('DELETE', `${API}/assignments/${e(id)}`),
+    myAssignmentSubmission: (id) => r('GET', `${API}/assignments/${e(id)}/my`),
+    submitAssignment: (id, data) => r('POST', `${API}/assignments/${e(id)}/submissions`, data),
+    assignmentInbox: (params) => r('GET', `${API}/assignments/inbox${q(params)}`),
+    gradeSubmission: (submissionId, data) => r('PATCH', `${API}/assignments/submissions/${e(submissionId)}/grade`, data),
+
+    // ── Wishlist ──
+    wishlist: () => r('GET', `${API}/wishlist/`),
+    addWishlist: (courseId) => r('POST', `${API}/wishlist/`, { courseId }),
+    removeWishlist: (courseId) => r('DELETE', `${API}/wishlist/${e(courseId)}`),
+
+    // ── Achievements (creator CRUD + student earned/streak) ──
+    achievements: () => r('GET', `${API}/achievements/`),
+    createAchievement: (data) => r('POST', `${API}/achievements/`, data),
+    updateAchievement: (id, data) => r('PUT', `${API}/achievements/${e(id)}`, data),
+    deleteAchievement: (id) => r('DELETE', `${API}/achievements/${e(id)}`),
+    myAchievements: () => r('GET', `${API}/achievements/my`),
+    myStreak: () => r('GET', `${API}/achievements/my/streak`),
+
+    // ── Certificate template (creator branding) ──
+    certificateTemplate: () => r('GET', `${API}/certificate-templates/my`),
+    saveCertificateTemplate: (data) => r('PUT', `${API}/certificate-templates/my`, data),
+
+    // ── Lesson notes + bookmarks (mounted at /learn) ──
+    notes: (params) => r('GET', `${API}/learn/notes${q(params)}`),
+    saveNote: (data) => r('PUT', `${API}/learn/notes`, data),
+    deleteNote: (id) => r('DELETE', `${API}/learn/notes/${e(id)}`),
+    bookmarks: (params) => r('GET', `${API}/learn/bookmarks${q(params)}`),
+    addBookmark: (data) => r('POST', `${API}/learn/bookmarks`, data),
+    deleteBookmark: (id) => r('DELETE', `${API}/learn/bookmarks/${e(id)}`),
   };
 }
 

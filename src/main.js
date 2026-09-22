@@ -113,6 +113,15 @@ const handlers = {
   broadcast: () => require('./commands/social').broadcast(client, subArgs, jsonMode),
   community: () => require('./commands/social').community(client, subArgs, jsonMode),
 
+  // Learning-native — discussions, assignments, wishlist, achievements, notes, certificate template
+  discussions: () => require('./commands/discussions').run(client, subArgs, jsonMode),
+  assignments: () => require('./commands/assignments').run(client, subArgs, jsonMode),
+  wishlist: () => require('./commands/wishlist').run(client, subArgs, jsonMode),
+  achievements: () => require('./commands/achievements').run(client, subArgs, jsonMode),
+  notes: () => require('./commands/notes').notes(client, subArgs, jsonMode),
+  bookmarks: () => require('./commands/notes').bookmarks(client, subArgs, jsonMode),
+  certtemplate: () => require('./commands/certtemplate').run(client, subArgs, jsonMode),
+
   // Commerce — memberships, products, coaching
   memberships: () => require('./commands/commerce').memberships(client, subArgs, jsonMode),
   products: () => require('./commands/commerce').products(client, subArgs, jsonMode),

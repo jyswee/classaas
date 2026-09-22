@@ -80,6 +80,15 @@ const AGENT_SCHEMA = {
     broadcast: { syntax: 'caas broadcast COURSE_ID "message to all students"', roles: ['host', 'org_admin', 'super_admin'], description: 'Opens the course broadcast channel and posts into it' },
     community: { syntax: 'caas community [--category ID] | caas community categories | caas community post "Title" -m "body" [--category ID] | caas community show POST_ID | caas community reply POST_ID "text" | caas community upvote POST_ID | caas community category create "name" (org_admin)' },
 
+    // Learning-native
+    discussions: { syntax: 'caas discussions COURSE_ID [--lesson L] | caas discussions COURSE_ID show DISC_ID | caas discussions COURSE_ID ask "Title" -m "body" [--lesson L] | caas discussions COURSE_ID reply DISC_ID "text" | caas discussions COURSE_ID upvote|pin|resolve|rm DISC_ID', description: 'Course Q&A threads (enrolled + creator; pin/resolve/rm are creator-only)' },
+    assignments: { syntax: 'caas assignments --course C | --lesson L | caas assignments create --course C --lesson L --title "T" [-d DESC --due ISO --points N --type text|url] | caas assignments update AID … | caas assignments rm AID | caas assignments mine AID | caas assignments submit AID --text "…"|--url "…" | caas assignments inbox [--status --course] | caas assignments grade SUBMISSION_ID --grade N [-m "feedback"]', description: 'Assignment authoring (creator), submissions (student), grading (creator)' },
+    wishlist: { syntax: 'caas wishlist | caas wishlist add COURSE_ID | caas wishlist rm COURSE_ID' },
+    achievements: { syntax: 'caas achievements | caas achievements create --title "T" --trigger TYPE [-d DESC --icon 🏆 --config JSON] | caas achievements update ID … | caas achievements rm ID | caas achievements mine | caas achievements streak', roles: ['host', 'org_admin', 'super_admin'], description: 'Creator CRUD; mine/streak are for any signed-in learner' },
+    notes: { syntax: 'caas notes --course C | --lesson L | caas notes save --course C --lesson L -m "body" | caas notes rm NOTE_ID', description: 'My private lesson notes' },
+    bookmarks: { syntax: 'caas bookmarks --course C | --lesson L | caas bookmarks add --course C --lesson L [--at SECONDS --label "…"] | caas bookmarks rm BOOKMARK_ID', description: 'My lesson bookmarks (timestamped for video)' },
+    certtemplate: { syntax: 'caas certtemplate | caas certtemplate save [--header … --org … --subtitle … --descriptor … --footer … --signature … --accent #111 --logo URL]', roles: ['host', 'org_admin', 'super_admin'], description: 'Completion-certificate branding' },
+
     // Commerce
     memberships: { syntax: 'caas memberships [--mine|--public] | caas memberships create "Name" --price CENTS --interval month | caas memberships subscribe ID | caas memberships cancel SUB_ID' },
     products: { syntax: 'caas products [--mine|--public] | caas products create "Name" --price CENTS [--file-url URL]' },
@@ -164,6 +173,12 @@ ${C.bold}SOCIAL${C.reset}
   caas review COURSE_ID --stars 5 -m "..."    Leave a review
   caas inbox | caas msg CONV_ID ["text"]      Messaging
   caas community [post|reply|show|upvote]     Community forum
+  caas discussions COURSE_ID [ask|reply|…]    Course Q&A threads
+  caas assignments [create|submit|grade|…]    Assignments + grading
+  caas wishlist [add|rm COURSE_ID]            Saved courses
+  caas achievements [mine|streak|create|…]    Badges + learning streak
+  caas notes | caas bookmarks                 Private lesson notes / bookmarks
+  caas certtemplate [save …]                  Certificate branding ${C.dim}(creator)${C.reset}
 
 ${C.bold}COMMERCE${C.reset}
   caas memberships | products | coaching      List (--mine / --public / create ...)

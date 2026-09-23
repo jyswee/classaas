@@ -185,14 +185,81 @@ function api(config) {
     myOrg: () => r('GET', `${API}/organizations/mine`),
     setOrgDomain: (data) => r('PUT', `${API}/organizations/mine/domain`, data),
 
-    // Platform admin (super_admin)
-    adminStats: () => r('GET', `${API}/admin/stats`),
-    adminUsers: () => r('GET', `${API}/admin/users`),
-    adminOrgs: () => r('GET', `${API}/admin/organizations`),
+    // Platform admin (super_admin) — routes/platformAdmin.js @ /admin
+    adminStats: (params) => r('GET', `${API}/admin/stats${q(params)}`),
+    adminRevenueTrends: (params) => r('GET', `${API}/admin/revenue-trends${q(params)}`),
+    adminUsers: (params) => r('GET', `${API}/admin/users${q(params)}`),
+    adminOrgs: (params) => r('GET', `${API}/admin/organizations${q(params)}`),
+    adminUsage: (params) => r('GET', `${API}/admin/usage${q(params)}`),
+    adminUsageRefresh: (orgId) => r('POST', `${API}/admin/usage/${e(orgId)}/refresh`),
     adminHealth: () => r('GET', `${API}/admin/health/detailed`),
+    adminEmailDeliverability: () => r('GET', `${API}/admin/email-deliverability`),
+    adminImpersonate: (userId) => r('POST', `${API}/admin/impersonate/${e(userId)}`),
+    adminImpersonateStop: (data) => r('POST', `${API}/admin/impersonate/stop`, data || {}),
+    adminQueues: () => r('GET', `${API}/admin/queues`),
+    adminQueueJobs: (name, params) => r('GET', `${API}/admin/queues/${e(name)}/jobs${q(params)}`),
+    adminQueueRetry: (name) => r('POST', `${API}/admin/queues/${e(name)}/retry-failed`),
+    adminQueueDrain: (name) => r('POST', `${API}/admin/queues/${e(name)}/drain`),
     adminBootstrap: () => r('POST', `${API}/admin/bootstrap`),
     adminMigrateCourses: (data) => r('POST', `${API}/admin/migrate-courses`, data || {}, 12 * 60 * 1000),
     adminScaffoldAccreditation: () => r('POST', `${API}/admin/scaffold-accreditation`, {}, 12 * 60 * 1000),
+
+    // Student CRM (host/org_admin/super_admin) — routes/sdk/crm.js @ /sdk/crm
+    adminStudents: (params) => r('GET', `${API}/sdk/crm/students${q(params)}`),
+    adminStudent: (userId) => r('GET', `${API}/sdk/crm/students/${e(userId)}`),
+    adminStudentTags: (userId, data) => r('PUT', `${API}/sdk/crm/students/${e(userId)}/tags`, data),
+    adminStudentNote: (userId, data) => r('POST', `${API}/sdk/crm/students/${e(userId)}/notes`, data),
+    adminStudentsExport: (params) => r('GET', `${API}/sdk/crm/students/export${q(params)}`),
+
+    // Organization management (org_admin/super_admin) — routes/organizations.js @ /organizations
+    myOrgById: (params) => r('GET', `${API}/organizations/mine${q(params)}`),
+    verifyOrgDomain: (data) => r('POST', `${API}/organizations/mine/domain/verify`, data || {}),
+    orgRolePermissions: () => r('GET', `${API}/organizations/mine/role-permissions`),
+    setOrgRolePermissions: (data) => r('PUT', `${API}/organizations/mine/role-permissions`, data),
+    orgPayoutsConsolidated: (params) => r('GET', `${API}/organizations/mine/payouts-consolidated${q(params)}`),
+    runOrgPayoutsConsolidated: (data) => r('POST', `${API}/organizations/mine/payouts-consolidated/run`, data || {}),
+
+    // Compliance + audit (super_admin/org_admin) — routes/compliance.js @ /compliance
+    auditTrail: (params) => r('GET', `${API}/compliance/audit-trail${q(params)}`),
+    securityAssessment: () => r('GET', `${API}/compliance/security-assessment`),
+    complianceDashboard: () => r('GET', `${API}/compliance/dashboard`),
+    complianceReport: (data) => r('POST', `${API}/compliance/reports`, data),
+
+    // Affiliates (host/org_admin/super_admin) — routes/affiliates.js @ /affiliates
+    affiliates: () => r('GET', `${API}/affiliates`),
+    approveAffiliate: (id) => r('PUT', `${API}/affiliates/${e(id)}/approve`),
+    suspendAffiliate: (id) => r('PUT', `${API}/affiliates/${e(id)}/suspend`),
+    setAffiliateRate: (id, data) => r('PUT', `${API}/affiliates/${e(id)}/commission-rate`, data),
+    affiliatesStats: () => r('GET', `${API}/affiliates/stats`),
+
+    // Community moderation (org_admin/super_admin) — routes/community.js @ /community
+    createCommunityCategory: (data) => r('POST', `${API}/community/categories`, data),
+    updateCommunityCategory: (id, data) => r('PUT', `${API}/community/categories/${e(id)}`, data),
+    deleteCommunityCategory: (id) => r('DELETE', `${API}/community/categories/${e(id)}`),
+    pinCommunityPost: (id) => r('PATCH', `${API}/community/posts/${e(id)}/pin`),
+    lockCommunityPost: (id) => r('PATCH', `${API}/community/posts/${e(id)}/lock`),
+
+    // SSO config (org_admin/super_admin) — routes/sso.js @ /auth/sso
+    ssoConfig: () => r('GET', `${API}/auth/sso/config`),
+    setSsoConfig: (data) => r('PUT', `${API}/auth/sso/config`, data),
+    testSsoConfig: (data) => r('POST', `${API}/auth/sso/config/test`, data || {}),
+    disableSso: () => r('DELETE', `${API}/auth/sso/config`),
+    ssoUsers: () => r('GET', `${API}/auth/sso/users`),
+
+    // Theming custom CSS (org_admin/super_admin) — routes/theming.js @ /theming
+    customCss: (orgId) => r('GET', `${API}/theming/custom-css/${e(orgId)}`),
+    setCustomCss: (orgId, data) => r('PUT', `${API}/theming/custom-css/${e(orgId)}`, data),
+    deleteCustomCss: (orgId) => r('DELETE', `${API}/theming/custom-css/${e(orgId)}`),
+    customCssHistory: (orgId) => r('GET', `${API}/theming/custom-css/${e(orgId)}/history`),
+    restoreCustomCss: (orgId, index) => r('PUT', `${API}/theming/custom-css/${e(orgId)}/restore/${e(index)}`),
+
+    // Student dashboard config (org_admin/super_admin) — routes/studentDashboardConfig.js
+    studentDashboardConfig: () => r('GET', `${API}/student-dashboard-config`),
+    setStudentDashboardConfig: (data) => r('PUT', `${API}/student-dashboard-config`, data),
+
+    // Abandoned carts (host/org_admin/super_admin) — routes/abandonedCarts.js
+    abandonedCarts: (params) => r('GET', `${API}/abandoned-carts${q(params)}`),
+    abandonedCartsStats: () => r('GET', `${API}/abandoned-carts/stats`),
 
     // Feature flags (super_admin)
     featureFlags: () => r('GET', `${API}/feature-flags/`),
@@ -203,8 +270,12 @@ function api(config) {
     // Coupons
     validateCoupon: (data) => r('POST', `${API}/coupons/validate`, data),
     coupons: (params) => r('GET', `${API}/coupons/${q(params)}`),
+    coupon: (id) => r('GET', `${API}/coupons/${e(id)}`),
     createCoupon: (data) => r('POST', `${API}/coupons/`, data),
+    updateCoupon: (id, data) => r('PUT', `${API}/coupons/${e(id)}`, data),
+    deactivateCoupon: (id) => r('PATCH', `${API}/coupons/${e(id)}/deactivate`),
     deleteCoupon: (id) => r('DELETE', `${API}/coupons/${e(id)}`),
+    couponsAnalytics: (params) => r('GET', `${API}/coupons/analytics/overview${q(params)}`),
 
     // Cohorts + instructors
     cohorts: () => r('GET', `${API}/cohorts`),

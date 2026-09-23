@@ -101,11 +101,31 @@ const AGENT_SCHEMA = {
     payouts: { syntax: 'caas payouts [ID] [--pending|--summary] | caas payouts cancel ID', roles: ['host', 'org_admin', 'super_admin'] },
     dashboard: { syntax: 'caas dashboard [--forecast|--customers|--payments]', roles: ['host', 'org_admin', 'super_admin'] },
 
-    // Admin
-    admin: { syntax: 'caas admin [stats|users|orgs|health] | caas admin bootstrap (promote self to super_admin on a fresh platform — closes once one exists) | caas admin migrate [--force|--dry-run] (seed course catalogue) | caas admin scaffold (build accreditation programme)', roles: ['super_admin'] },
+    // Admin (super_admin) — full platform control surface
+    admin: {
+      syntax: 'caas admin <verb>',
+      roles: ['super_admin'],
+      description: 'Administer the entire SaaS from the CLI. Impersonation lets one super_admin token drive organiser + student flows.',
+      verbs: {
+        platform: 'stats [--org] | revenue-trends [--days N --org] | usage [--org] | usage-refresh ORG_ID | health | email-deliverability',
+        impersonate: 'impersonate USER_ID (mints a 30-min JWT as target, saved to .classaas — subsequent commands run as them; super_admin targets blocked) | impersonate stop (restore your token)',
+        enumeration: 'users [--role R --q S --page N] | orgs [--q S --page N]',
+        queues: 'queues | queue-jobs NAME [--state S] | queue-retry NAME | queue-drain NAME --yes (destructive)',
+        students: 'students [--q S --page N] | student USER_ID | student-tag USER_ID --tags a,b | student-note USER_ID -m "…" | students-export [--format csv]',
+        org: 'org [--id] | org-domain --domain D | org-domain-verify [--id] | org-permissions | org-permissions-set --config JSON | org-payouts [--org] | org-payouts-run --org --yes (destructive)',
+        compliance: 'audit [--q S --action A --page N] | security-assessment | compliance-dashboard | compliance-report [--config JSON]',
+        affiliates: 'affiliates | affiliate-approve ID | affiliate-suspend ID | affiliate-rate ID --rate N | affiliates-stats',
+        community: 'community-category create|update|delete [--name --description] | post-pin ID | post-lock ID | instructor-grant --user U [--streams a,b]',
+        sso: 'sso get|set|test|disable [--config JSON] | sso-users',
+        theming: 'css get|set|rm|history|restore --org ORG_ID [--file f.css|--css "…"|--index N]',
+        dashboard: 'dashboard-config get|set [--config JSON]',
+        carts: 'carts [--page N] | carts-stats',
+        maintenance: 'bootstrap (first-admin self-promote) | migrate [--force|--dry-run] | scaffold | flags (alias of caas flags)',
+      },
+    },
     org: { syntax: 'caas org [--domain example.com]', roles: ['org_admin', 'super_admin'] },
     flags: { syntax: 'caas flags | caas flags create NAME [--enabled true] | caas flags update ID --enabled false | caas flags rm ID', roles: ['super_admin'] },
-    coupons: { syntax: 'caas coupons | caas coupons create CODE --percent 20 | caas coupons validate CODE [--course ID] | caas coupons rm ID', roles: ['host', 'org_admin', 'super_admin'] },
+    coupons: { syntax: 'caas coupons | caas coupons show ID | caas coupons create CODE --percent 20 | caas coupons update ID [--percent N] | caas coupons deactivate ID | caas coupons validate CODE [--course ID] | caas coupons rm ID | caas coupons analytics', roles: ['host', 'org_admin', 'super_admin'] },
   },
 };
 
@@ -191,11 +211,18 @@ ${C.bold}MONEY${C.reset} ${C.dim}(creator)${C.reset}
   caas dashboard [--forecast|--customers]     Business dashboards
   caas coupons [create CODE --percent 20]     Coupons
 
-${C.bold}ADMIN${C.reset} ${C.dim}(super_admin)${C.reset}
-  caas admin [stats|users|orgs|health]        Platform admin
-  caas admin bootstrap                        First-admin self-promote (fresh platform only)
-  caas admin migrate [--force|--dry-run]      Seed course catalogue
-  caas admin scaffold                         Build accreditation programme
+${C.bold}ADMIN${C.reset} ${C.dim}(super_admin — administer the whole SaaS from the CLI)${C.reset}
+  caas admin stats|users|orgs|health          Platform overview + enumeration
+  caas admin impersonate USER_ID [| stop]     Run as any user (30-min JWT; stop restores you)
+  caas admin revenue-trends|usage|usage-refresh   Revenue + per-org usage metering
+  caas admin queues [queue-jobs|queue-retry|queue-drain]   Job queue administration
+  caas admin students|student|student-tag|student-note     Student CRM
+  caas admin org|org-domain|org-permissions|org-payouts    Organization management
+  caas admin audit|security-assessment|compliance-dashboard   Compliance + audit trail
+  caas admin affiliates|affiliate-approve|affiliate-rate   Affiliate management
+  caas admin community-category|post-pin|post-lock         Community moderation
+  caas admin sso|css|dashboard-config|carts   SSO / theming / dashboard / carts
+  caas admin bootstrap|migrate|scaffold       First-admin promote / seed / accreditation
   caas org [--domain example.com]             My organization
   caas flags                                  Feature flags
 

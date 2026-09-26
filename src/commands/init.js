@@ -120,6 +120,7 @@ const AGENT_SCHEMA = {
         theming: 'css get|set|rm|history|restore --org ORG_ID [--file f.css|--css "…"|--index N]',
         dashboard: 'dashboard-config get|set [--config JSON]',
         carts: 'carts [--page N] | carts-stats',
+        apikey: 'apikey mint --name NAME [--expires ISO --scopes a,b --user USER_ID] (secret shown once; no --expires = never expires) | apikey list [--user USER_ID --all] | apikey revoke KEY_ID',
         maintenance: 'bootstrap (first-admin self-promote) | migrate [--force|--dry-run] | scaffold | flags (alias of caas flags)',
       },
     },
@@ -222,6 +223,7 @@ ${C.bold}ADMIN${C.reset} ${C.dim}(super_admin — administer the whole SaaS from
   caas admin affiliates|affiliate-approve|affiliate-rate   Affiliate management
   caas admin community-category|post-pin|post-lock         Community moderation
   caas admin sso|css|dashboard-config|carts   SSO / theming / dashboard / carts
+  caas admin apikey mint|list|revoke          Durable API keys (non-expiring by default)
   caas admin bootstrap|migrate|scaffold       First-admin promote / seed / accreditation
   caas org [--domain example.com]             My organization
   caas flags                                  Feature flags

@@ -204,6 +204,11 @@ function api(config) {
     adminMigrateCourses: (data) => r('POST', `${API}/admin/migrate-courses`, data || {}, 12 * 60 * 1000),
     adminScaffoldAccreditation: () => r('POST', `${API}/admin/scaffold-accreditation`, {}, 12 * 60 * 1000),
 
+    // Durable API keys (any authed user; super_admin may target ?userId=/?all=) — routes/apiKeys.js @ /api-keys
+    apikeyMint: (data) => r('POST', `${API}/api-keys`, data),
+    apikeyList: (params) => r('GET', `${API}/api-keys${q(params)}`),
+    apikeyRevoke: (keyId) => r('DELETE', `${API}/api-keys/${e(keyId)}`),
+
     // Student CRM (host/org_admin/super_admin) — routes/sdk/crm.js @ /sdk/crm
     adminStudents: (params) => r('GET', `${API}/sdk/crm/students${q(params)}`),
     adminStudent: (userId) => r('GET', `${API}/sdk/crm/students/${e(userId)}`),

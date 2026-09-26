@@ -517,6 +517,55 @@ async function admin(client, args, json) {
     return out(json, result, () => { fmt.heading('Abandoned Cart Stats'); console.log(JSON.stringify(result.data, null, 2)); });
   }
 
+  // ── Durable API keys ──────────────────────────────────────
+  if (sub === 'apikey' || sub === 'apikeys') {
+    const action = pos[0] || 'list';
+    if (action === 'mint' || action === 'create') {
+      validateFlags(rest, ['name', 'description', 'scopes', 'expires', 'user'],
+        'caas admin apikey mint --name NAME [--expires ISO] [--user USER_ID] [--scopes a,b]');
+      const name = strFlag(rest, 'name');
+      if (!name) { fmt.err('Usage: caas admin apikey mint --name NAME'); process.exit(1); }
+      const body = { name };
+      const desc = strFlag(rest, 'description'); if (desc) body.description = desc;
+      const exp = strFlag(rest, 'expires'); if (exp) body.expiresAt = exp;
+      const user = strFlag(rest, 'user'); if (user) body.userId = user;
+      const scopes = strFlag(rest, 'scopes'); if (scopes) body.scopes = scopes.split(',').map(s => s.trim()).filter(Boolean);
+      const result = await client.apikeyMint(body);
+      return out(json, result, () => {
+        if (!result.success) return fmt.err(result.message || 'Failed to mint API key');
+        fmt.ok(result.message || 'API key created');
+        const d = result.data || {};
+        fmt.row('keyId', d.keyId || '');
+        fmt.row('name', d.name || '');
+        fmt.row('expires', d.expiresAt ? String(d.expiresAt) : 'never');
+        console.log('');
+        fmt.heading('Secret (shown once — copy it now)');
+        console.log(`  ${fmt.C.orange}${d.key || ''}${fmt.C.reset}`);
+      });
+    }
+    if (action === 'revoke' || action === 'rm' || action === 'delete') {
+      const keyId = pos[1];
+      if (!keyId) { fmt.err('Usage: caas admin apikey revoke KEY_ID'); process.exit(1); }
+      const result = await client.apikeyRevoke(keyId);
+      return out(json, result, () => fmt.ok(result.message || 'API key revoked'));
+    }
+    // list (default)
+    validateFlags(rest.slice(1), ['user', 'all'], 'caas admin apikey list [--user USER_ID] [--all]');
+    const params = qs({ userId: strFlag(rest, 'user'), all: hasFlag(rest, 'all') ? 'true' : null });
+    const result = await client.apikeyList(params);
+    return out(json, result, () => {
+      const rows = Array.isArray(result.data) ? result.data : ((result.data && result.data.keys) || []);
+      if (!Array.isArray(rows) || !rows.length) return fmt.info('No API keys.');
+      fmt.heading('API Keys');
+      rows.forEach(k => {
+        const state = k.revokedAt ? 'revoked' : (k.isActive ? 'active' : 'expired');
+        const exp = k.expiresAt ? String(k.expiresAt).slice(0, 10) : 'never';
+        console.log(`  ${fmt.pad(`${fmt.C.orange}${k.keyId || ''}${fmt.C.reset}`, 42)} ${fmt.pad(k.prefix || '', 16)} ${fmt.pad(state, 9)} ${fmt.pad('exp ' + exp, 16)} ${fmt.C.gray}${k.name || ''}${fmt.C.reset}`);
+      });
+      console.log(fmt.count(rows.length, 'key'));
+    });
+  }
+
   // ── flags alias ───────────────────────────────────────────
   if (sub === 'flags') return flags(client, rest, json);
 

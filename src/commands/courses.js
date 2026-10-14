@@ -56,7 +56,7 @@ async function show(client, args, json) {
   if (c.category) console.log(fmt.row('Category', c.category));
   if (c.difficultyLevel) console.log(fmt.row('Difficulty', c.difficultyLevel));
   const pr = c.pricing || {};
-  console.log(fmt.row('Pricing', pr.type === 'paid' ? `${pr.currency || 'USD'} ${pr.amount}` : 'free'));
+  console.log(fmt.row('Pricing', pr.type && pr.type !== 'free' ? `${pr.currency || 'USD'} ${pr.amount}` : 'free'));
   if (c.sections) console.log(fmt.row('Sections', String(c.sections.length)));
   if (c.stats) console.log(fmt.row('Enrollments', String(c.stats.totalEnrollments || 0)));
   if (c.tags && c.tags.length) console.log(fmt.row('Tags', c.tags.join(', ')));

@@ -71,7 +71,7 @@ function truncate(str, len) {
 function courseLine(c) {
   const cols = process.stdout.columns || 120;
   const slug = pad(`${C.orange}${truncate(c.slug || c.courseId || '', 44)}${C.reset}`, 46);
-  const pr = pad(c.pricing && c.pricing.type === 'paid'
+  const pr = pad(c.pricing && c.pricing.type !== 'free'
     ? `${C.yellow}${c.pricing.currency || 'USD'} ${c.pricing.amount}${C.reset}`
     : `${C.green}free${C.reset}`, 14);
   const title = truncate(c.title || '', Math.max(20, cols - 64));

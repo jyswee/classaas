@@ -47,7 +47,7 @@ async function create(client, args, json) {
     category: strFlag(args, 'category') || strFlag(args, 'c') || 'general',
     difficultyLevel: strFlag(args, 'difficulty') || 'beginner',
     pricing: (price && price !== true)
-      ? { type: 'paid', amount: Number(price), currency: strFlag(args, 'currency') || 'USD' }
+      ? { type: 'one_time', amount: Number(price), currency: strFlag(args, 'currency') || 'USD' }
       : { type: 'free', amount: 0, currency: 'USD' },
   };
   const tags = strFlag(args, 'tags');
@@ -72,7 +72,7 @@ async function show(client, args, json) {
     console.log(fmt.row('ID', c._id || c.courseId || id));
     console.log(fmt.row('Status', fmt.status(c.status)));
     console.log(fmt.row('Slug', c.slug || '--'));
-    console.log(fmt.row('Pricing', c.pricing && c.pricing.type === 'paid' ? `${c.pricing.currency} ${c.pricing.amount}` : 'free'));
+    console.log(fmt.row('Pricing', c.pricing && c.pricing.type !== 'free' ? `${c.pricing.currency} ${c.pricing.amount}` : 'free'));
     console.log(fmt.row('Enrolled', String(c.enrollmentCount ?? c.enrollments ?? 0)));
     const sections = c.sections || [];
     if (sections.length) {
@@ -134,7 +134,7 @@ async function update(client, args, json) {
   if (desc) data.description = desc;
   if (cat) data.category = cat;
   if (diff) data.difficultyLevel = diff;
-  if (price) data.pricing = { type: Number(price) > 0 ? 'paid' : 'free', amount: Number(price), currency: strFlag(args, 'currency') || 'USD' };
+  if (price) data.pricing = { type: Number(price) > 0 ? 'one_time' : 'free', amount: Number(price), currency: strFlag(args, 'currency') || 'USD' };
   if (!Object.keys(data).length) { fmt.err('Nothing to update.'); process.exit(1); }
   const result = await client.updateCourse(id, data);
   out(json, result, (r) => fmt.ok(r.message || 'Updated'));

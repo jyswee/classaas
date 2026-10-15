@@ -53,7 +53,9 @@ async function connect(client, args, json) {
     return fmt.ok(result.message || 'Connect account created');
   }
   if (sub === 'link') {
-    const result = await client.connectLink();
+    // The API requires both URLs; send the learner back to their dashboard either way.
+    const back = new URL('/dashboard', client.baseUrl).toString();
+    const result = await client.connectLink({ return_url: back, refresh_url: back });
     if (json) return console.log(JSON.stringify(result, null, 2));
     const d = result.data || {};
     fmt.ok('Onboarding link:');

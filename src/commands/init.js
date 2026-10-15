@@ -51,8 +51,8 @@ const AGENT_SCHEMA = {
     remove: { syntax: 'caas remove COURSE_ID', roles: ['host', 'org_admin', 'super_admin'] },
     duplicate: { syntax: 'caas duplicate COURSE_ID [--title "New title"]', roles: ['host', 'org_admin', 'super_admin'] },
     section: { syntax: 'caas section add COURSE_ID "Title" | caas section update COURSE_ID SECTION_ID --title T | caas section rm COURSE_ID SECTION_ID', roles: ['host', 'org_admin', 'super_admin'] },
-    lesson: { syntax: 'caas lesson add COURSE_ID SECTION_ID "Title" [--type text|video|quiz] [--content TEXT] [--duration MIN] | caas lesson update COURSE_ID SECTION_ID LESSON_ID ... | caas lesson rm COURSE_ID SECTION_ID LESSON_ID', roles: ['host', 'org_admin', 'super_admin'] },
-    quizset: { syntax: 'caas quizset set COURSE_ID SECTION_ID LESSON_ID --questions JSON [--passing 70] [--title T] | caas quizset show ... | caas quizset rm ...', roles: ['host', 'org_admin', 'super_admin'] },
+    lesson: { syntax: 'caas lesson add COURSE_ID SECTION_ID "Title" [--type text|video|quiz] [--content HTML | --content-file PATH] [--duration MIN] | caas lesson update COURSE_ID SECTION_ID LESSON_ID [--title T] [--content HTML | --content-file PATH] [--duration MIN] | caas lesson rm COURSE_ID SECTION_ID LESSON_ID', roles: ['host', 'org_admin', 'super_admin'] },
+    quizset: { syntax: 'caas quizset set COURSE_ID SECTION_ID LESSON_ID --questions-file PATH [--meta-file PATH] [--passing 70] [--title T] | caas quizset show ... | caas quizset rm ...', roles: ['host', 'org_admin', 'super_admin'] },
     students: { syntax: 'caas students COURSE_ID [--q text] [--page N]', roles: ['host', 'org_admin', 'super_admin'] },
     'bulk-enroll': { syntax: 'caas bulk-enroll COURSE_ID --emails a@x.com,b@y.com', roles: ['host', 'org_admin', 'super_admin'] },
     analytics: { syntax: 'caas analytics [COURSE_ID] [--engagement]', roles: ['host', 'org_admin', 'super_admin'] },
@@ -168,8 +168,8 @@ ${C.bold}TEACHING${C.reset} ${C.dim}(host/org_admin/super_admin)${C.reset}
   caas show COURSE_ID                         Course + curriculum tree
   caas publish|archive|remove|duplicate ID    Lifecycle
   caas section add COURSE_ID "Title"          Add section
-  caas lesson add COURSE_ID SECTION_ID "T"    Add lesson (--type text|video|quiz)
-  caas quizset set C S L --questions JSON     Attach quiz to lesson
+  caas lesson add COURSE_ID SECTION_ID "T"    Add lesson (--type text|video|quiz, --content-file PATH)
+  caas quizset set C S L --questions-file F   Attach quiz to lesson (--meta-file, --passing)
   caas students COURSE_ID                     Enrolled students
   caas bulk-enroll COURSE_ID --emails a,b     Bulk enroll
   caas analytics [COURSE_ID]                  Course / engagement analytics

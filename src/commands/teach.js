@@ -186,19 +186,29 @@ async function section(client, args, json) {
 
 // ── Lessons ─────────────────────────────────────────────────
 
-// caas lesson add COURSE SECTION "Title" [--type text|video|quiz] [--content TEXT]
+// Lesson body: --content HTML, or --content-file PATH for real lessons (too long for argv).
+function lessonContent(args) {
+  const file = strFlag(args, 'content-file');
+  if (file) {
+    try { return require('fs').readFileSync(file, 'utf8'); }
+    catch (e) { fmt.err(`Cannot read --content-file ${file}: ${e.message}`); process.exit(1); }
+  }
+  return strFlag(args, 'content');
+}
+
+// caas lesson add COURSE SECTION "Title" [--type text|video|quiz] [--content HTML | --content-file PATH]
 async function lesson(client, args, json) {
   const sub = args[0];
   const rest = args.slice(1);
   if (sub === 'add') {
-    validateFlags(rest, ['type', 'content', 'duration'], 'caas lesson add COURSE_ID SECTION_ID "Title" [--type text] [--content TEXT]');
+    validateFlags(rest, ['type', 'content', 'content-file', 'duration'], 'caas lesson add COURSE_ID SECTION_ID "Title" [--type text] [--content HTML | --content-file PATH]');
     const pos = positionalArgs(rest);
     const [courseId, sectionId] = pos;
     const title = pos.slice(2).join(' ').trim();
     if (!courseId || !sectionId || !title) { fmt.err('Usage: caas lesson add COURSE_ID SECTION_ID "Title"'); process.exit(1); }
     const data = { title, type: strFlag(rest, 'type') || 'text' };
-    const content = strFlag(rest, 'content');
-    if (content) data.content = content;
+    const content = lessonContent(rest);
+    if (content) data.content = { htmlContent: content };
     const duration = strFlag(rest, 'duration');
     if (duration) data.estimatedDuration = Number(duration);
     const result = await client.addLesson(courseId, sectionId, data);
@@ -213,15 +223,15 @@ async function lesson(client, args, json) {
     });
   }
   if (sub === 'update') {
-    validateFlags(rest, ['title', 'content', 'duration'], 'caas lesson update COURSE_ID SECTION_ID LESSON_ID --title T');
+    validateFlags(rest, ['title', 'content', 'content-file', 'duration'], 'caas lesson update COURSE_ID SECTION_ID LESSON_ID [--title T] [--content HTML | --content-file PATH]');
     const pos = positionalArgs(rest);
     if (pos.length < 3) { fmt.err('Usage: caas lesson update COURSE_ID SECTION_ID LESSON_ID --title T'); process.exit(1); }
     const data = {};
     const title = strFlag(rest, 'title');
-    const content = strFlag(rest, 'content');
+    const content = lessonContent(rest);
     const duration = strFlag(rest, 'duration');
     if (title) data.title = title;
-    if (content) data.content = content;
+    if (content) data.content = { htmlContent: content };
     if (duration) data.estimatedDuration = Number(duration);
     const result = await client.updateLesson(pos[0], pos[1], pos[2], data);
     return out(json, result, (r) => fmt.ok(r.message || 'Lesson updated'));
@@ -253,19 +263,34 @@ async function quizset(client, args, json) {
     const result = await client.deleteLessonQuiz(pos[0], pos[1], pos[2]);
     return out(json, result, (r) => fmt.ok(r.message || 'Quiz removed'));
   }
-  validateFlags(args, ['questions', 'passing', 'title'],
-    'caas quizset COURSE_ID SECTION_ID LESSON_ID --questions \'[{"question":"2+2?","type":"multiple_choice","options":["3","4"],"correctAnswer":1}]\'');
-  const pos = positionalArgs(args);
-  if (pos.length < 3) { fmt.err('Usage: caas quizset COURSE_ID SECTION_ID LESSON_ID --questions JSON'); process.exit(1); }
-  const qjson = strFlag(args, 'questions');
-  if (!qjson) { fmt.err('--questions JSON array required'); process.exit(1); }
-  let questions;
-  try { questions = JSON.parse(qjson); } catch (e2) { fmt.err(`Invalid --questions JSON: ${e2.message}`); process.exit(1); }
-  const data = { questions };
-  const passing = strFlag(args, 'passing');
-  if (passing) data.passingScore = Number(passing);
-  const title = strFlag(args, 'title');
-  if (title) data.title = title;
+  validateFlags(args, ['questions', 'questions-file', 'meta-file', 'passing', 'title'],
+    'caas quizset set COURSE_ID SECTION_ID LESSON_ID --questions-file quiz.json [--meta-file quiz-meta.json] [--passing 70] [--title T]');
+  // Accept `caas quizset set ...` as well as the older `caas quizset ...`.
+  const rest = sub === 'set' ? args.slice(1) : args;
+  const pos = positionalArgs(rest);
+  if (pos.length < 3) { fmt.err('Usage: caas quizset set COURSE_ID SECTION_ID LESSON_ID --questions-file PATH'); process.exit(1); }
+  const readJson = (flag) => {
+    const file = strFlag(rest, flag);
+    if (!file) return undefined;
+    try { return JSON.parse(require('fs').readFileSync(file, 'utf8')); }
+    catch (e2) { fmt.err(`Cannot read --${flag} ${file}: ${e2.message}`); process.exit(1); }
+  };
+  // Files use the shape the server stores (and `caas quizset show` prints):
+  // questions = [{questionText, questionType, options:[{text,isCorrect}], explanation, points}],
+  // meta = {title, description, settings:{passingScore, ...}}. A file may also hold the whole quiz object.
+  let questions = readJson('questions-file');
+  let meta = readJson('meta-file') || {};
+  if (questions && !Array.isArray(questions)) { meta = { ...questions, ...meta }; questions = questions.questions; }
+  if (!questions) {
+    const qjson = strFlag(rest, 'questions');
+    if (!qjson) { fmt.err('--questions-file PATH (or --questions JSON) required'); process.exit(1); }
+    try { questions = JSON.parse(qjson); } catch (e2) { fmt.err(`Invalid --questions JSON: ${e2.message}`); process.exit(1); }
+  }
+  const settings = { ...(meta.settings || {}) };
+  const passing = strFlag(rest, 'passing');
+  if (passing) settings.passingScore = Number(passing);
+  const data = { title: strFlag(rest, 'title') || meta.title || 'Quiz', questions, settings };
+  if (meta.description !== undefined) data.description = meta.description;
   const result = await client.setLessonQuiz(pos[0], pos[1], pos[2], data);
   out(json, result, (r) => fmt.ok(r.message || 'Quiz saved'));
 }

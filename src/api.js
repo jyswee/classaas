@@ -169,7 +169,7 @@ function api(config) {
     // Stripe Connect + payouts
     connectStatus: () => r('GET', `${API}/stripe-connect/account-status`),
     connectCreate: (data) => r('POST', `${API}/stripe-connect/create-account`, data),
-    connectLink: () => r('POST', `${API}/stripe-connect/account-link`),
+    connectLink: (data) => r('POST', `${API}/stripe-connect/account-link`, data || {}),
     payouts: (params) => r('GET', `${API}/payouts/${q(params)}`),
     payout: (id) => r('GET', `${API}/payouts/${e(id)}`),
     payoutsPending: () => r('GET', `${API}/payouts/pending/payments`),

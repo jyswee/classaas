@@ -23,6 +23,7 @@ function request(baseUrl, token, method, path, body, timeoutMs) {
       method,
       headers,
     }, (res) => {
+      res.setEncoding('utf8');
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {

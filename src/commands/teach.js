@@ -120,8 +120,8 @@ async function duplicate(client, args, json) {
 
 // caas teach update ID --title T -d DESC --price CENTS
 async function update(client, args, json) {
-  validateFlags(args, ['title', 'd', 'description', 'category', 'price', 'currency', 'difficulty'],
-    'caas teach update COURSE_ID [--title T] [-d DESC] [--price CENTS]');
+  validateFlags(args, ['title', 'd', 'description', 'category', 'price', 'currency', 'difficulty', 'compare-at', 'offer-ends'],
+    'caas teach update COURSE_ID [--title T] [-d DESC] [--price CENTS] [--compare-at CENTS --offer-ends YYYY-MM-DD]');
   const id = positionalArgs(args)[0];
   if (!id) { fmt.err('Usage: caas teach update COURSE_ID [--title T] ...'); process.exit(1); }
   const data = {};
@@ -135,6 +135,18 @@ async function update(client, args, json) {
   if (cat) data.category = cat;
   if (diff) data.difficultyLevel = diff;
   if (price) data.pricing = { type: Number(price) > 0 ? 'one_time' : 'free', amount: Number(price), currency: strFlag(args, 'currency') || 'USD' };
+  // Launch offer: struck-through compare-at price until a real end date (--compare-at 0 removes it)
+  const compareAt = strFlag(args, 'compare-at');
+  const offerEnds = strFlag(args, 'offer-ends');
+  if (compareAt !== null && compareAt !== undefined) {
+    data.pricing = { ...(data.pricing || {}), compareAtAmount: Number(compareAt) || null };
+    if (!Number(compareAt)) data.pricing.offerEndsAt = null;
+  }
+  if (offerEnds) {
+    const ends = new Date(/^\d{4}-\d{2}-\d{2}$/.test(offerEnds) ? `${offerEnds}T23:59:59Z` : offerEnds);
+    if (isNaN(ends)) { fmt.err('--offer-ends must be a date, e.g. 2026-10-31'); process.exit(1); }
+    data.pricing = { ...(data.pricing || {}), offerEndsAt: ends.toISOString() };
+  }
   if (!Object.keys(data).length) { fmt.err('Nothing to update.'); process.exit(1); }
   const result = await client.updateCourse(id, data);
   out(json, result, (r) => fmt.ok(r.message || 'Updated'));

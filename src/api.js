@@ -282,6 +282,12 @@ function api(config) {
     deactivateCoupon: (id) => r('PATCH', `${API}/coupons/${e(id)}/deactivate`),
     deleteCoupon: (id) => r('DELETE', `${API}/coupons/${e(id)}`),
     couponsAnalytics: (params) => r('GET', `${API}/coupons/analytics/overview${q(params)}`),
+    // Course coupons: the codes buyers enter at course checkout (distinct from platform /coupons)
+    courseCoupons: () => r('GET', `${API}/course-coupons`),
+    createCourseCoupon: (data) => r('POST', `${API}/course-coupons`, data),
+    updateCourseCoupon: (id, data) => r('PUT', `${API}/course-coupons/${e(id)}`, data),
+    deleteCourseCoupon: (id) => r('DELETE', `${API}/course-coupons/${e(id)}`),
+    validateCourseCoupon: (data) => r('POST', `${API}/course-coupons/validate`, data),
 
     // Cohorts + instructors
     cohorts: () => r('GET', `${API}/cohorts`),

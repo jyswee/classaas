@@ -46,6 +46,7 @@ const AGENT_SCHEMA = {
     create: { syntax: 'caas create "Title" [-d DESC] [--category X] [--price CENTS] [--currency usd] [--difficulty X] [--tags a,b]', roles: ['host', 'org_admin', 'super_admin'] },
     show: { syntax: 'caas show COURSE_ID', roles: ['host', 'org_admin', 'super_admin'], description: 'Course detail + sections/lessons tree with IDs' },
     update: { syntax: 'caas update COURSE_ID [--title T] [-d DESC] [--category X] [--price CENTS] [--compare-at CENTS --offer-ends YYYY-MM-DD]', roles: ['host', 'org_admin', 'super_admin'] },
+    'course-coupons': { syntax: 'caas course-coupons | caas course-coupons create CODE --percent N [--course ID[,ID]] [--max-uses N] [--per-customer N] [--expires YYYY-MM-DD] | caas course-coupons update ID [--percent N] [--max-uses N] [--per-customer N] [--expires YYYY-MM-DD] | caas course-coupons deactivate ID | caas course-coupons rm ID | caas course-coupons validate CODE --course ID', roles: ['host', 'org_admin', 'super_admin'], description: 'Discount codes buyers enter at course checkout' },
     publish: { syntax: 'caas publish COURSE_ID', roles: ['host', 'org_admin', 'super_admin'] },
     archive: { syntax: 'caas archive COURSE_ID', roles: ['host', 'org_admin', 'super_admin'] },
     remove: { syntax: 'caas remove COURSE_ID', roles: ['host', 'org_admin', 'super_admin'] },

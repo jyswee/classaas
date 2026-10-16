@@ -149,4 +149,87 @@ async function coaching(client, args, json) {
   listRows(Array.isArray(rows) ? rows : [], 'coaching programs');
 }
 
-module.exports = { memberships, products, coaching };
+// caas course-coupons | create CODE --percent N [--course ID[,ID]] [--max-uses N] [--expires YYYY-MM-DD]
+//   | deactivate ID | rm ID | validate CODE --course ID
+// Codes buyers type at course checkout. --course takes one id or a comma list
+// (one code across a series); omit it and the code covers all your paid courses.
+async function courseCoupons(client, args, json) {
+  const sub = args[0];
+  const rest = args.slice(1);
+  const usage = 'caas course-coupons [create CODE --percent N | --amount CENTS [--course ID[,ID]] [--max-uses N] [--per-customer N] [--expires YYYY-MM-DD] [--name N] | update ID [--percent N] [--max-uses N] [--per-customer N] [--expires DATE] | deactivate ID | rm ID | validate CODE --course ID]';
+  const out = (r, pretty) => { if (json) return console.log(JSON.stringify(r, null, 2)); if (!r.success) { fmt.err(r.message || 'Failed'); process.exit(1); } pretty(r); };
+
+  if (sub === 'create') {
+    validateFlags(rest, ['percent', 'amount', 'course', 'max-uses', 'per-customer', 'expires', 'name', 'currency'], usage);
+    const code = positionalArgs(rest)[0];
+    const percent = strFlag(rest, 'percent');
+    const amount = strFlag(rest, 'amount');
+    if (!code || (!percent && !amount)) { fmt.err(`Usage: ${usage}`); process.exit(1); }
+    const data = {
+      code,
+      discountType: percent ? 'percentage' : 'fixed_amount',
+      discountValue: Number(percent || amount)
+    };
+    const courses = (strFlag(rest, 'course') || '').split(',').map(s => s.trim()).filter(Boolean);
+    if (courses.length === 1) data.courseId = courses[0];
+    if (courses.length > 1) data.courseIds = courses;
+    if (strFlag(rest, 'max-uses')) data.maxUses = Number(strFlag(rest, 'max-uses'));
+    if (strFlag(rest, 'per-customer')) data.maxUsesPerCustomer = Number(strFlag(rest, 'per-customer'));
+    if (strFlag(rest, 'name')) data.name = strFlag(rest, 'name');
+    if (strFlag(rest, 'currency')) data.currency = strFlag(rest, 'currency');
+    const expires = strFlag(rest, 'expires');
+    if (expires) {
+      const d = new Date(/^\d{4}-\d{2}-\d{2}$/.test(expires) ? `${expires}T23:59:59Z` : expires);
+      if (isNaN(d)) { fmt.err('--expires must be a date, e.g. 2026-12-31'); process.exit(1); }
+      data.validUntil = d.toISOString();
+    }
+    return out(await client.createCourseCoupon(data), (r) => fmt.ok(`Coupon ${r.data.code} created (${r.data._id})`));
+  }
+  if (sub === 'update') {
+    validateFlags(rest, ['percent', 'max-uses', 'per-customer', 'expires', 'name'], usage);
+    const id = positionalArgs(rest)[0];
+    if (!id) { fmt.err('Usage: caas course-coupons update ID [--percent N] [--max-uses N] [--per-customer N] [--expires YYYY-MM-DD]'); process.exit(1); }
+    const data = {};
+    if (strFlag(rest, 'percent')) { data.discountType = 'percentage'; data.discountValue = Number(strFlag(rest, 'percent')); }
+    if (strFlag(rest, 'max-uses')) data.maxUses = Number(strFlag(rest, 'max-uses'));
+    if (strFlag(rest, 'per-customer')) data.maxUsesPerCustomer = Number(strFlag(rest, 'per-customer'));
+    if (strFlag(rest, 'name')) data.name = strFlag(rest, 'name');
+    const expires = strFlag(rest, 'expires');
+    if (expires) {
+      const d = new Date(/^\d{4}-\d{2}-\d{2}$/.test(expires) ? `${expires}T23:59:59Z` : expires);
+      if (isNaN(d)) { fmt.err('--expires must be a date, e.g. 2026-12-31'); process.exit(1); }
+      data.validUntil = d.toISOString();
+    }
+    if (!Object.keys(data).length) { fmt.err('Nothing to update.'); process.exit(1); }
+    return out(await client.updateCourseCoupon(id, data), (r) => fmt.ok(`Coupon ${r.data?.code || id} updated`));
+  }
+  if (sub === 'deactivate') {
+    const id = positionalArgs(rest)[0];
+    if (!id) { fmt.err('Usage: caas course-coupons deactivate ID'); process.exit(1); }
+    return out(await client.updateCourseCoupon(id, { isActive: false }), () => fmt.ok('Coupon deactivated'));
+  }
+  if (sub === 'rm') {
+    const id = positionalArgs(rest)[0];
+    if (!id) { fmt.err('Usage: caas course-coupons rm ID'); process.exit(1); }
+    return out(await client.deleteCourseCoupon(id), (r) => fmt.ok(r.message || 'Coupon deleted'));
+  }
+  if (sub === 'validate') {
+    validateFlags(rest, ['course'], usage);
+    const code = positionalArgs(rest)[0];
+    const courseId = strFlag(rest, 'course');
+    if (!code || !courseId) { fmt.err('Usage: caas course-coupons validate CODE --course ID'); process.exit(1); }
+    return out(await client.validateCourseCoupon({ code, courseId }), (r) => fmt.ok(JSON.stringify(r.data)));
+  }
+  if (sub && sub !== 'list') { fmt.err(`Usage: ${usage}`); process.exit(1); }
+  return out(await client.courseCoupons(), (r) => {
+    const list = Array.isArray(r.data) ? r.data : (r.data?.coupons || []);
+    fmt.info(`Course coupons (${list.length})`);
+    for (const c of list) {
+      const off = c.discountType === 'percentage' ? `${c.discountValue}%` : `${c.discountValue}c`;
+      const scope = c.courseIds?.length ? `${c.courseIds.length} courses` : (c.courseId ? `course ${c.courseId}` : 'all my courses');
+      console.log(`  ${c.code}  ${off} off  ${scope}  uses ${c.currentUses || 0}/${c.maxUses || '∞'}  ${c.isActive ? 'active' : 'inactive'}  ${c._id}`);
+    }
+  });
+}
+
+module.exports = { memberships, products, coaching, courseCoupons };

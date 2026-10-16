@@ -139,6 +139,7 @@ const handlers = {
   org: () => require('./commands/admin').org(client, subArgs, jsonMode),
   flags: () => require('./commands/admin').flags(client, subArgs, jsonMode),
   coupons: () => require('./commands/admin').coupons(client, subArgs, jsonMode),
+  'course-coupons': () => require('./commands/commerce').courseCoupons(client, subArgs, jsonMode),
 };
 
 if (handlers[command]) {

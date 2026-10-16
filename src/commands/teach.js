@@ -120,7 +120,7 @@ async function duplicate(client, args, json) {
 
 // caas teach update ID --title T -d DESC --price CENTS
 async function update(client, args, json) {
-  validateFlags(args, ['title', 'd', 'description', 'category', 'price', 'currency', 'difficulty', 'compare-at', 'offer-ends'],
+  validateFlags(args, ['title', 'd', 'description', 'category', 'price', 'currency', 'difficulty', 'compare-at', 'offer-ends', 'cover'],
     'caas teach update COURSE_ID [--title T] [-d DESC] [--price CENTS] [--compare-at CENTS --offer-ends YYYY-MM-DD]');
   const id = positionalArgs(args)[0];
   if (!id) { fmt.err('Usage: caas teach update COURSE_ID [--title T] ...'); process.exit(1); }
@@ -134,6 +134,8 @@ async function update(client, args, json) {
   if (desc) data.description = desc;
   if (cat) data.category = cat;
   if (diff) data.difficultyLevel = diff;
+  const cover = strFlag(args, 'cover');
+  if (cover) data.coverImage = cover === 'none' ? null : cover;
   if (price) data.pricing = { type: Number(price) > 0 ? 'one_time' : 'free', amount: Number(price), currency: strFlag(args, 'currency') || 'USD' };
   // Launch offer: struck-through compare-at price until a real end date (--compare-at 0 removes it)
   const compareAt = strFlag(args, 'compare-at');
@@ -175,14 +177,17 @@ async function section(client, args, json) {
     });
   }
   if (sub === 'update') {
-    validateFlags(rest, ['title', 'd', 'description'], 'caas section update COURSE_ID SECTION_ID --title T');
+    validateFlags(rest, ['title', 'd', 'description', 'banner'], 'caas section update COURSE_ID SECTION_ID [--title T] [--banner URL|none]');
     const pos = positionalArgs(rest);
-    if (pos.length < 2) { fmt.err('Usage: caas section update COURSE_ID SECTION_ID --title T'); process.exit(1); }
+    if (pos.length < 2) { fmt.err('Usage: caas section update COURSE_ID SECTION_ID [--title T] [--banner URL|none]'); process.exit(1); }
     const data = {};
     const title = strFlag(rest, 'title');
     const desc = strFlag(rest, 'description') || strFlag(rest, 'd');
+    const banner = strFlag(rest, 'banner');
     if (title) data.title = title;
     if (desc) data.description = desc;
+    if (banner) data.bannerImage = banner === 'none' ? null : banner;
+    if (!Object.keys(data).length) { fmt.err('Nothing to update.'); process.exit(1); }
     const result = await client.updateSection(pos[0], pos[1], data);
     return out(json, result, (r) => fmt.ok(r.message || 'Section updated'));
   }
